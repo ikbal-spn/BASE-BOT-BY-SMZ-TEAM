@@ -1,0 +1,31 @@
+{
+  "botSettings": {
+    "public": true,
+    "prefixEnabled": true,
+    "customPrefix": ".",
+    "defaultPrefix": "!",
+    "selfbot": false,
+    "autoRead": true,
+    "autoTyping": true,
+    "autoRecording": false,
+    "multiPrefix": false,
+    "allPrefix": [
+      ".",
+      "!",
+      "#",
+      "/"
+    ]
+  },
+  "groupSettings": {
+    "antiLink": false,
+    "antiToxic": false,
+    "welcome": true,
+    "leave": true,
+    "detect": true
+  },
+  "timeSettings": {
+    "timezone": "Asia/Jakarta",
+    "format": "HH:mm:ss",
+    "dateFormat": "DD/MM/YYYY"
+  }
+}

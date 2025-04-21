@@ -1,0 +1,58 @@
+{
+  "menu": {
+    "count": 3,
+    "success": 3,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 3
+    }
+  },
+  "*smz": {
+    "count": 1,
+    "success": 1,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 1
+    }
+  },
+  "command": {
+    "count": 143,
+    "success": 143,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 143
+    }
+  },
+  "h": {
+    "count": 1,
+    "success": 1,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 1
+    }
+  },
+  "about": {
+    "count": 1,
+    "success": 1,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 1
+    }
+  },
+  "ping": {
+    "count": 1,
+    "success": 1,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 1
+    }
+  },
+  "info": {
+    "count": 1,
+    "success": 1,
+    "failed": 0,
+    "users": {
+      "6282295832808@s.whatsapp.net": 1
+    }
+  }
+}
