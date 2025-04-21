@@ -107,25 +107,17 @@ ${prefix}about - Tentang bot ini
 `;
 
       // Buat tombol untuk menu
-      const buttons = [
-        { displayText: `${prefix}cekmoney` },
-        { displayText: `${prefix}deposit` },
-        { displayText: `${prefix}listproduk` },
-        { displayText: `${prefix}owner` }
+      const templateButtons = [
+        { index: 1, urlButton: { displayText: `${prefix}cekmoney`, url: `https://wa.me/${settings.ownerInfo.number}?text=${encodeURIComponent(prefix + 'cekmoney')}` } },
+        { index: 2, urlButton: { displayText: `${prefix}deposit`, url: `https://wa.me/${settings.ownerInfo.number}?text=${encodeURIComponent(prefix + 'deposit')}` } },
+        { index: 3, urlButton: { displayText: `${prefix}listproduk`, url: `https://wa.me/${settings.ownerInfo.number}?text=${encodeURIComponent(prefix + 'listproduk')}` } },
+        { index: 4, urlButton: { displayText: `${prefix}owner`, url: `https://wa.me/${settings.ownerInfo.number}?text=${encodeURIComponent(prefix + 'owner')}` } }
       ];
 
       await sock.sendMessage(from, { 
         text: menuText,
         footer: `${settings.botInfo.name} © ${new Date().getFullYear()}`,
-        templateButtons: buttons.map((btn, i) => {
-          return { 
-            index: i + 1, 
-            urlButton: { 
-              displayText: btn.displayText,
-              url: `https://wa.me/${settings.ownerInfo.number}?text=${encodeURIComponent(btn.displayText)}`
-            }
-          };
-        })
+        templateButtons: templateButtons
       }, { quoted: msg });
       break;
       
@@ -269,4 +261,169 @@ ${prefix}about - Tentang bot ini
       
     case 'addproduk':
       // Cek jika bukan owner
-      if (!settings.isOw
+      if (!settings.isOwner(sender)) {
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.ownerOnly 
+        }, { quoted: msg });
+        break;
+      }
+      
+      if (args.length < 2) {
+        await sock.sendMessage(from, { 
+          text: `Penggunaan: ${prefix}addproduk [nama] [harga]` 
+        }, { quoted: msg });
+        break;
+      }
+      
+      const productName = args.slice(0, -1).join(' ');
+      const productPrice = parseInt(args[args.length - 1]);
+      
+      if (isNaN(productPrice) || productPrice <= 0) {
+        await sock.sendMessage(from, { 
+          text: 'Harga produk harus berupa angka positif!' 
+        }, { quoted: msg });
+        break;
+      }
+      
+      try {
+        const product = storeFunctions.addProduct(productName, productPrice);
+        await sock.sendMessage(from, { 
+          text: `✅ Produk berhasil ditambahkan!\n\nNama: ${product.name}\nHarga: ${storeFunctions.formatMoney(product.price)}\nKode: ${product.code}` 
+        }, { quoted: msg });
+      } catch (error) {
+        console.error('Error adding product:', error);
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.error 
+        }, { quoted: msg });
+      }
+      break;
+      
+    case 'cekmoney':
+      const balance = storeFunctions.getUserBalance(sender);
+      const formattedUserBalance = storeFunctions.formatMoney(balance);
+      await sock.sendMessage(from, { 
+        text: `💰 Saldo Anda: ${formattedUserBalance}` 
+      }, { quoted: msg });
+      break;
+      
+    case 'listproduk':
+      const products = storeFunctions.getAllProducts();
+      
+      if (Object.keys(products).length === 0) {
+        await sock.sendMessage(from, { 
+          text: 'Belum ada produk yang tersedia.' 
+        }, { quoted: msg });
+        break;
+      }
+      
+      let productList = '*DAFTAR PRODUK*\n\n';
+      Object.values(products).forEach((product, index) => {
+        productList += `*Produk ${index + 1}*\n`;
+        productList += `Nama produk : ${product.name}\n`;
+        productList += `Harga       : ${storeFunctions.formatMoney(product.price)}\n`;
+        productList += `Kode produk : ${product.code}\n\n`;
+      });
+      
+      productList += `Untuk membeli produk ketik: ${prefix}buyproduk [kode]`;
+      
+      await sock.sendMessage(from, { 
+        text: productList 
+      }, { quoted: msg });
+      break;
+      
+    case 'buyproduk':
+      if (args.length < 1) {
+        await sock.sendMessage(from, { 
+          text: `Penggunaan: ${prefix}buyproduk [kode]` 
+        }, { quoted: msg });
+        break;
+      }
+      
+      const productCode = args[0].toUpperCase();
+      const product = storeFunctions.getProduct(productCode);
+      
+      if (!product) {
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.productNotFound 
+        }, { quoted: msg });
+        break;
+      }
+      
+      const userCurrentBalance = storeFunctions.getUserBalance(sender);
+      
+      if (userCurrentBalance < product.price) {
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.insufficientBalance 
+        }, { quoted: msg });
+        break;
+      }
+      
+      try {
+        // Kurangi saldo user
+        const newUserBalance = storeFunctions.reduceUserBalance(sender, product.price);
+        
+        if (newUserBalance === false) {
+          await sock.sendMessage(from, { 
+            text: settings.defaultMessages.insufficientBalance 
+          }, { quoted: msg });
+          break;
+        }
+        
+        // Kirim notifikasi ke pembeli
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.purchaseSuccess 
+        }, { quoted: msg });
+        
+        // Kirim notifikasi ke owner
+        const ownerJid = `${settings.ownerInfo.number}@s.whatsapp.net`;
+        await sock.sendMessage(ownerJid, { 
+          text: `📢 *NOTIFIKASI PEMBELIAN BARU*\n\nPembeli: ${pushName} (${sender.split('@')[0]})\nProduk: ${product.name}\nHarga: ${storeFunctions.formatMoney(product.price)}\nKode: ${product.code}\n\nMohon segera diproses!` 
+        });
+      } catch (error) {
+        console.error('Error processing purchase:', error);
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.error 
+        }, { quoted: msg });
+      }
+      break;
+      
+    case 'deposit':
+      try {
+        const depositMessage = `*DEPOSIT SALDO*\n\nScan QRIS di bawah untuk melakukan deposit saldo:\n`;
+        
+        await sock.sendMessage(from, { 
+          image: { url: settings.storeSettings.qrisImage },
+          caption: depositMessage + settings.storeSettings.paymentInstructions.join('\n')
+        }, { quoted: msg });
+      } catch (error) {
+        console.error('Error sending deposit info:', error);
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.error 
+        }, { quoted: msg });
+      }
+      break;
+      
+    case 'kirimbuktop':
+      try {
+        await sock.sendMessage(from, { 
+          text: 'Silakan kirim bukti pembayaran Anda (foto).\n\nAdmin akan segera memproses deposit Anda.' 
+        }, { quoted: msg });
+        
+        // Kirim notifikasi ke owner
+        const ownerJid = `${settings.ownerInfo.number}@s.whatsapp.net`;
+        await sock.sendMessage(ownerJid, { 
+          text: `📢 *NOTIFIKASI DEPOSIT*\n\nUser: ${pushName} (${sender.split('@')[0]}) telah meminta deposit.\n\nMohon cek bukti pembayaran yang akan dikirimkan.` 
+        });
+      } catch (error) {
+        console.error('Error processing deposit:', error);
+        await sock.sendMessage(from, { 
+          text: settings.defaultMessages.error 
+        }, { quoted: msg });
+      }
+      break;
+      
+    default:
+      // Command tidak ditemukan
+      break;
+  }
+}
