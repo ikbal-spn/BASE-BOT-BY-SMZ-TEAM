@@ -1,0 +1,47 @@
+{
+
+  "name": "whatsapp-bot",
+
+  "version": "1.0.0",
+
+  "description": "Bot WhatsApp sederhana dengan sistem pairing code",
+
+  "main": "index.js",
+
+  "type": "module",
+
+  "scripts": {
+
+    "start": "node index.js"
+
+  },
+
+  "keywords": [
+
+    "whatsapp-bot",
+
+    "baileys",
+
+    "nodejs"
+
+  ],
+
+  "author": "Your Name",
+
+  "license": "MIT",
+
+  "dependencies": {
+
+    "@whiskeysockets/baileys": "^6.17.16",
+
+    "chalk": "^5.3.0",
+
+    "node-cache": "^5.1.2",
+
+    "pino": "^8.17.0",
+
+    "qrcode-terminal": "^0.12.0"
+
+  }
+
+}
